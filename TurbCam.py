@@ -1,7 +1,20 @@
 import numpy as np
 import cv2
+#from enum import Enum
 
+# Define the types of calibration curves that can be used. 
+# The calibration curve is determined by the experimental 
+# setup. Back-scatter turbidimeters should use a linear curve
+# while forward-scatter should use a log curve.
+#class Cal_Curve(Enum):
+ #   linear = "Back-scatter"
+  #  logarithmic = "Forward-scatter"
+
+# cap is capturing video on camera with address 0 
 cap = cv2.VideoCapture(0)
+
+# TODO: Set the White Balance manually
+cap.set(cv2.cv.CV_CAP_PROP_FPS, 2);
 
 # Input: camera capture instance
 # Output: grayscale frame
@@ -12,24 +25,29 @@ def getFrameGray(cap):
     # Our operations on the frame come here
     return cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
-# Input: a raw value to find the turbidity of, and two calibration 
-# points (value a for x turbidity and b for y turbidity)
-# Output: estimated turbidity value of raw_val
-def getTurbValue(raw_val,(a,x),(b,y)):
-	# Find Inverse Slope
-	m = (y-x)*(b-a)
-	# Find Adjustmant Constant
-	i = m/a-x
-	return m/raw_val+i
+# Input: Two calibration points 
+# Output: (l,i_in)
+def getTurbCalLin(t1,i1,t2,i2):
+    # Find the path length, l
+    l = np.log(i2/i1)/(t1-t2)
+	# Find the incoming light intensity, i_in
+    i_in = i2/(np.exp(-t2*l))
+    return (l,i_in)
+
+# Input: Calibration Values and light intensity
+# Output: Turbidity
+def getTurbValLin(raw_val,l,i_in):
+    return np.log(raw_val/i_in)/(-l)
+	
+# Record 0 NTU calibration value
+t1=int(raw_input("ENTER NTU VALUE OF NTU ON CAMERA \n"))
+i1=np.mean(getFrameGray(cap))
 
 # Record 0 NTU calibration value
-x=int(raw_input("ENTER NTU VALUE OF NTU ON CAMERA"))
-a=np.mean(getFrameGray(cap))
+t2=int(raw_input("ENTER NTU VALUE OF NTU ON CAMERA \n"))
+i2=np.mean(getFrameGray(cap))
 
-# Record 0 NTU calibration value
-y=int(raw_input("ENTER NTU VALUE OF NTU ON CAMERA"))
-b=np.mean(getFrameGray(cap))
-
+(l,i_in) = getTurbCalLin(t1,i1,t2,i2)
 # main loop
 while(True):
 	# Get the next frame
@@ -39,7 +57,7 @@ while(True):
     raw_val = np.mean(gray)
 
     # Find the turbidity
-    print getTurbValue(raw_val,(a,x),(b,y))
+    print(getTurbValLin(raw_val,l,i_in))
 
      # Display the resulting frame
     cv2.imshow('frame',gray)
