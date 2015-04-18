@@ -1,14 +1,18 @@
 import numpy as np
 import cv2
-#from enum import Enum
 
+# Mission:
+# TurbCam determines the turbidity of a sample using
+# a camera, any clear container, and at least two known turbidity 
+# samples. 
+
+# Functionality:
+# Scattering Theories: 
 # Define the types of calibration curves that can be used. 
 # The calibration curve is determined by the experimental 
 # setup. Back-scatter turbidimeters should use a linear curve
 # while forward-scatter should use a log curve.
-#class Cal_Curve(Enum):
- #   linear = "Back-scatter"
-  #  logarithmic = "Forward-scatter"
+
 
 # cap is capturing video on camera with address 0 
 cap = cv2.VideoCapture(0)
